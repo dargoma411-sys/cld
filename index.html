@@ -1,358 +1,81 @@
 <!DOCTYPE html>
 <html lang="ru" data-theme="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flux — финансовый трекер</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e0e14">
+<title>Сальдо — трекер личных финансов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
+<a class="skip" href="#main">Перейти к содержимому</a>
 
-<div id="pageProgress"></div>
+<div class="boot" id="boot">
+  <div class="boot-in">
+    <div class="brand-mark" style="width:44px;height:44px;border-radius:14px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17.5 8.5 11l4 3.6L21 6"/><path d="M15.5 6H21v5.4"/><circle cx="8.5" cy="11" r="1.4" fill="currentColor" stroke="none"/></svg>
+    </div>
+    <div class="boot-bar"><i id="bootFill"></i></div>
+    <p class="boot-txt">Сальдо · загрузка</p>
+  </div>
+</div>
 
-<svg width="0" height="0" style="position:absolute">
-  <defs>
-    <linearGradient id="gradStroke" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#8b5cf6"/>
-      <stop offset="100%" stop-color="#3b82f6"/>
-    </linearGradient>
-    <linearGradient id="barIncome" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#4ade80"/>
-      <stop offset="100%" stop-color="#22c55e"/>
-    </linearGradient>
-    <linearGradient id="barExpense" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#f87171"/>
-      <stop offset="100%" stop-color="#ef4444"/>
-    </linearGradient>
-  </defs>
-</svg>
+<div class="topline" id="topline"><i id="topFill"></i></div>
 
-<div class="app">
-  <aside class="sidebar" aria-label="Основная навигация">
+<div class="bg" aria-hidden="true">
+  <div class="bg-grid"></div>
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+</div>
+
+<div class="shell">
+  <aside class="side">
     <div class="brand">
-      <div class="brand-logo">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <div class="brand-mark">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17.5 8.5 11l4 3.6L21 6"/><path d="M15.5 6H21v5.4"/></svg>
       </div>
       <div>
-        <div class="brand-name">Flux</div>
-        <div class="brand-sub">финансовый трекер</div>
+        <span class="brand-name">Сальдо</span>
+        <span class="brand-sub">finance&nbsp;tracker</span>
       </div>
     </div>
-    <nav class="nav">
-      <button class="nav-item active" data-screen="overview">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
-        Обзор
+    <nav class="nav" id="nav" aria-label="Основная навигация"></nav>
+    <div class="side-foot">
+      <div class="gauge-card" id="gaugeCard"></div>
+      <button class="mini-btn" data-act="shortcuts">
+        <svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3"/><path d="M7 10h.01M11 10h.01M15 10h.01M7.5 14h9"/></svg>
+        Горячие клавиши
+        <kbd style="margin-left:auto">?</kbd>
       </button>
-      <button class="nav-item" data-screen="transactions">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
-        Транзакции
-      </button>
-      <button class="nav-item" data-screen="categories">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-        Категории
-      </button>
-      <button class="nav-item" data-screen="goals">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
-        Цели
-      </button>
-      <button class="nav-item" data-screen="settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        Настройки
-      </button>
-    </nav>
-    <div class="nav-footer">
-      <button class="nav-item" id="themeToggle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        <span id="themeLabel">Светлая тема</span>
-      </button>
+      <button class="mini-btn" data-act="toggle-theme" id="themeBtnSide"></button>
     </div>
   </aside>
 
-  <div style="flex:1;min-width:0">
-    <header class="mobile-top">
-      <div class="brand" style="padding:0">
-        <div class="brand-logo">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        </div>
-        <div class="brand-name">Flux</div>
-      </div>
-      <button class="btn-icon" id="themeToggleMobile" aria-label="Переключить тему">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      </button>
+  <div class="content">
+    <header class="topbar">
+      <div class="tb-title" id="tbTitle"></div>
+      <div class="tb-acts" id="tbActs"></div>
     </header>
-
-    <main class="main">
-      <!-- OVERVIEW -->
-      <section class="screen active" id="screen-overview">
-        <div class="page-head">
-          <div>
-            <h1 class="page-title">Обзор</h1>
-            <div class="page-sub" id="overviewSub">Ваш финансовый обзор</div>
-          </div>
-          <button class="btn btn-primary" data-action="new-tx">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-            Добавить
-          </button>
-        </div>
-
-        <div class="balance-card">
-          <div class="balance-label">Текущий баланс</div>
-          <div class="balance-value" id="balanceValue">0 ₽</div>
-          <div id="balanceChange"></div>
-        </div>
-
-        <div class="stat-grid">
-          <div class="card stat-card hoverable">
-            <div class="stat-head">
-              <div class="stat-icon income">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-              </div>
-              <div class="stat-label">Доходы за месяц</div>
-            </div>
-            <div class="stat-value income" id="statIncome">0 ₽</div>
-          </div>
-          <div class="card stat-card hoverable">
-            <div class="stat-head">
-              <div class="stat-icon expense">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-              </div>
-              <div class="stat-label">Расходы за месяц</div>
-            </div>
-            <div class="stat-value expense" id="statExpense">0 ₽</div>
-          </div>
-          <div class="card stat-card hoverable">
-            <div class="stat-head">
-              <div class="stat-icon saving">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5c-1.5 0-2.8.5-4 1.5-1.2-1-2.5-1.5-4-1.5C7 5 4 7.5 4 11c0 4 5 8 8 10 3-2 8-6 8-10 0-3.5-3-6-5-6z"/></svg>
-              </div>
-              <div class="stat-label">Накопления</div>
-            </div>
-            <div class="stat-value" id="statSaving">0 ₽</div>
-          </div>
-        </div>
-
-        <div class="charts-grid">
-          <div class="card">
-            <div class="card-title">Динамика по месяцам</div>
-            <div class="chart-wrap" id="barChart"></div>
-          </div>
-          <div class="card">
-            <div class="card-title">Расходы по категориям</div>
-            <div class="chart-wrap" id="donutChart" style="display:flex;justify-content:center"></div>
-            <div class="donut-legend" id="donutLegend"></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
-            Последние операции
-            <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px" data-action="go-transactions">Все</button>
-          </div>
-          <div class="tx-list" id="recentList"></div>
-        </div>
-      </section>
-
-      <!-- TRANSACTIONS -->
-      <section class="screen" id="screen-transactions">
-        <div class="page-head">
-          <div>
-            <h1 class="page-title">Транзакции</h1>
-            <div class="page-sub" id="txCount">0 операций</div>
-          </div>
-          <button class="btn btn-primary" data-action="new-tx">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-            Добавить транзакцию
-          </button>
-        </div>
-
-        <div class="filters">
-          <input class="field search" type="search" id="txSearch" placeholder="Поиск по комментарию..." aria-label="Поиск по комментарию">
-          <select class="field" id="txTypeFilter" aria-label="Тип">
-            <option value="all">Все типы</option>
-            <option value="income">Доходы</option>
-            <option value="expense">Расходы</option>
-          </select>
-          <select class="field" id="txCatFilter" aria-label="Категория">
-            <option value="all">Все категории</option>
-          </select>
-          <select class="field" id="txMonthFilter" aria-label="Месяц">
-            <option value="all">Все месяцы</option>
-          </select>
-        </div>
-
-        <div class="card" style="padding:8px 12px">
-          <div class="tx-row head">
-            <div>Дата</div>
-            <div>Категория</div>
-            <div>Комментарий</div>
-            <div style="text-align:right">Сумма</div>
-            <div></div>
-          </div>
-          <div id="txTable"></div>
-        </div>
-      </section>
-
-      <!-- CATEGORIES -->
-      <section class="screen" id="screen-categories">
-        <div class="page-head">
-          <div>
-            <h1 class="page-title">Категории</h1>
-            <div class="page-sub">Управление категориями доходов и расходов</div>
-          </div>
-          <button class="btn btn-primary" data-action="new-category">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-            Добавить категорию
-          </button>
-        </div>
-
-        <div class="tabs" role="tablist">
-          <button class="tab active" data-cat-tab="expense" role="tab">Расходы</button>
-          <button class="tab" data-cat-tab="income" role="tab">Доходы</button>
-        </div>
-
-        <div class="cat-grid" id="catGrid"></div>
-      </section>
-
-      <!-- GOALS -->
-      <section class="screen" id="screen-goals">
-        <div class="page-head">
-          <div>
-            <h1 class="page-title">Цели</h1>
-            <div class="page-sub">Финансовые цели и накопления</div>
-          </div>
-          <button class="btn btn-primary" data-action="new-goal">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-            Добавить цель
-          </button>
-        </div>
-        <div class="goals-grid" id="goalsGrid"></div>
-      </section>
-
-      <!-- SETTINGS -->
-      <section class="screen" id="screen-settings">
-        <div class="page-head">
-          <div>
-            <h1 class="page-title">Настройки</h1>
-            <div class="page-sub">Валюта, данные и оформление</div>
-          </div>
-        </div>
-
-        <div class="settings-grid">
-          <div class="card">
-            <div class="card-title">Основные</div>
-            <div class="setting-row">
-              <div>
-                <div class="setting-label">Валюта</div>
-                <div class="setting-desc">Символ отображения сумм</div>
-              </div>
-              <select class="field" id="setCurrency">
-                <option value="RUB">₽ Рубль</option>
-                <option value="USD">$ Доллар</option>
-                <option value="EUR">€ Евро</option>
-                <option value="KZT">₸ Тенге</option>
-                <option value="UAH">₴ Гривна</option>
-              </select>
-            </div>
-            <div class="setting-row">
-              <div>
-                <div class="setting-label">Первый день недели</div>
-                <div class="setting-desc">Влияет на отображение дат</div>
-              </div>
-              <select class="field" id="setWeekStart">
-                <option value="1">Понедельник</option>
-                <option value="0">Воскресенье</option>
-              </select>
-            </div>
-            <div class="setting-row">
-              <div>
-                <div class="setting-label">Тема</div>
-                <div class="setting-desc">Тёмная или светлая</div>
-              </div>
-              <button class="btn btn-ghost" id="setThemeBtn">Переключить</button>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-title">Данные</div>
-            <div class="setting-row">
-              <div>
-                <div class="setting-label">Экспорт данных</div>
-                <div class="setting-desc">Скачать JSON со всеми данными</div>
-              </div>
-              <button class="btn btn-ghost" id="exportBtn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                Экспорт
-              </button>
-            </div>
-            <div class="setting-row">
-              <div>
-                <div class="setting-label">Импорт данных</div>
-                <div class="setting-desc">Загрузить JSON обратно</div>
-              </div>
-              <label class="btn btn-ghost" style="cursor:pointer">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                Импорт
-                <input type="file" id="importInput" accept="application/json" class="hidden">
-              </label>
-            </div>
-            <div class="setting-row">
-              <div>
-                <div class="setting-label" style="color:var(--red)">Сброс данных</div>
-                <div class="setting-desc">Удалить все транзакции, цели и настройки</div>
-              </div>
-              <button class="btn btn-danger" id="resetBtn">Сбросить</button>
-            </div>
-          </div>
-        </div>
-      </section>
+    <main class="main" id="main">
+      <section class="view" id="v-overview" role="region" aria-label="Обзор"></section>
+      <section class="view" id="v-transactions" role="region" aria-label="Транзакции"></section>
+      <section class="view" id="v-categories" role="region" aria-label="Категории"></section>
+      <section class="view" id="v-goals" role="region" aria-label="Цели"></section>
+      <section class="view" id="v-settings" role="region" aria-label="Настройки"></section>
     </main>
   </div>
 </div>
 
-<!-- MOBILE NAV -->
-<nav class="mobile-nav" aria-label="Мобильная навигация">
-  <div class="mobile-nav-inner">
-    <button class="mnav-item active" data-screen="overview">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
-      Обзор
-    </button>
-    <button class="mnav-item" data-screen="transactions">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
-      Операции
-    </button>
-    <button class="mnav-item" data-screen="categories">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-      Категории
-    </button>
-    <button class="mnav-item" data-screen="goals">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
-      Цели
-    </button>
-    <button class="mnav-item" data-screen="settings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Настройки
-    </button>
-  </div>
-</nav>
+<nav class="tabbar" aria-label="Навигация"><div class="in" id="tabbar"></div></nav>
+<button class="fab" data-act="new-tx" aria-label="Добавить транзакцию">
+  <svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+</button>
 
-<!-- MODAL -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal-head">
-      <div class="modal-title" id="modalTitle">Новая транзакция</div>
-      <button class="btn-icon" data-action="close-modal" aria-label="Закрыть">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
-    </div>
-    <div class="modal-body" id="modalBody"></div>
-    <div class="modal-foot" id="modalFoot"></div>
-  </div>
-</div>
-
-<div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
+<div class="modal-root" id="modalRoot"></div>
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+<input type="file" id="filePicker" accept="application/json,.json" class="sr" aria-hidden="true" tabindex="-1">
 
 <script src="script.js"></script>
 </body>
