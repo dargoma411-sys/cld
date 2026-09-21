@@ -1,6 +1,5 @@
 /**
- * FinTrack Application Logic
- * Pure Vanilla JS, No Frameworks
+ * FinTrack Application Logic - Fixed Version
  */
 
 const App = (() => {
@@ -10,12 +9,12 @@ const App = (() => {
     let state = {
         transactions: [],
         categories: [
-            { id: 'food', name: 'Продукты', color: '#f87171', icon: 'tag' },
-            { id: 'transport', name: 'Транспорт', color: '#60a5fa', icon: 'list' },
-            { id: 'entertainment', name: 'Развлечения', color: '#a78bfa', icon: 'target' },
-            { id: 'housing', name: 'Жильё', color: '#34d399', icon: 'home' },
-            { id: 'salary', name: 'Зарплата', color: '#4ade80', icon: 'arrow-up' },
-            { id: 'other', name: 'Другое', color: '#9ca3af', icon: 'plus' }
+            { id: 'food', name: 'Продукты', color: '#f87171' },
+            { id: 'transport', name: 'Транспорт', color: '#60a5fa' },
+            { id: 'entertainment', name: 'Развлечения', color: '#a78bfa' },
+            { id: 'housing', name: 'Жильё', color: '#34d399' },
+            { id: 'salary', name: 'Зарплата', color: '#4ade80' },
+            { id: 'other', name: 'Другое', color: '#9ca3af' }
         ],
         goals: [],
         settings: {
@@ -40,7 +39,11 @@ const App = (() => {
         cacheDOMElements();
         loadData();
         bindEvents();
+        
+        // Initial render of everything
         renderAllViews();
+        
+        // Setup keyboard shortcuts
         setupKeyboardShortcuts();
     }
 
@@ -114,20 +117,12 @@ const App = (() => {
         if (stored) {
             try {
                 const parsed = JSON.parse(stored);
-                // Merge with defaults to handle schema changes
                 state = { ...state, ...parsed };
-                // Ensure arrays exist
                 if (!Array.isArray(state.transactions)) state.transactions = [];
                 if (!Array.isArray(state.categories)) state.categories = [];
                 if (!Array.isArray(state.goals)) state.goals = [];
             } catch (e) {
                 console.error("Failed to parse local storage", e);
-            }
-        } else {
-            // Seed some demo data if empty? Let's keep it clean for now.
-            // Or add one dummy transaction so charts aren't broken initially
-            if (state.transactions.length === 0) {
-               // Optional: Auto-seed logic could go here
             }
         }
     }
@@ -141,7 +136,6 @@ const App = (() => {
         els.mobileToggle.addEventListener('click', () => {
             els.sidebar.classList.toggle('open');
         });
-        // Close sidebar when clicking outside on mobile
         document.addEventListener('click', (e) => {
             if (window.innerWidth <= 768 && 
                 !els.sidebar.contains(e.target) && 
@@ -215,9 +209,7 @@ const App = (() => {
         els.txTypeBtns.forEach(b => b.classList.remove('active'));
         document.querySelector(`.type-btn[data-type="expense"]`).classList.add('active');
         
-        // Set default date to today
         els.txDateInput.valueAsDate = new Date();
-        
         updateCategoryOptionsForType('expense');
 
         if (txId) {
@@ -228,7 +220,6 @@ const App = (() => {
                 document.getElementById('txAmount').value = tx.amount;
                 document.getElementById('txComment').value = tx.comment || '';
                 
-                // Set type
                 els.txTypeInput.value = tx.type;
                 els.txTypeBtns.forEach(b => {
                     b.classList.toggle('active', b.dataset.type === tx.type);
@@ -252,11 +243,6 @@ const App = (() => {
 
     function updateCategoryOptionsForType(type) {
         els.txCategorySelect.innerHTML = '';
-        // Filter categories based on type? Usually expenses have specific cats, income too.
-        // For simplicity, we show all, but maybe sort them.
-        // Ideally, you'd assign types to categories in the model. 
-        // Here we assume user picks appropriate cat.
-        
         state.categories.forEach(cat => {
             const opt = document.createElement('option');
             opt.value = cat.id;
@@ -275,7 +261,6 @@ const App = (() => {
         const comment = document.getElementById('txComment').value.trim();
         const type = els.txTypeInput.value;
 
-        // Validation
         if (isNaN(amount) || amount <= 0) {
             showToast('Сумма должна быть больше нуля', 'error');
             return;
@@ -289,7 +274,6 @@ const App = (() => {
             return;
         }
         
-        // Check future date
         const today = new Date();
         today.setHours(0,0,0,0);
         if (new Date(date) > today) {
@@ -319,7 +303,7 @@ const App = (() => {
         }
 
         saveData();
-        renderAllViews();
+        renderAllViews(); // Re-render everything after change
         closeTxModal();
     }
 
@@ -343,20 +327,18 @@ const App = (() => {
         const newCat = {
             id: generateUUID(),
             name,
-            color,
-            icon: 'tag' // Default icon
+            color
         };
         
         state.categories.push(newCat);
         saveData();
-        renderCategories();
-        populateFilters(); // Update dropdowns
+        renderCategories(); // Only re-render categories list
+        populateFilters();  // Update dropdowns elsewhere
         showToast('Категория добавлена', 'success');
         e.target.reset();
     }
 
     function deleteCategory(id) {
-        // Check usage
         const usedInTx = state.transactions.some(t => t.categoryId === id);
         if (usedInTx) {
             showToast('Нельзя удалить категорию с транзакциями', 'error');
@@ -385,14 +367,14 @@ const App = (() => {
             id: generateUUID(),
             name,
             target,
-            current: 0, // Start at 0, manual adjustment or linked to savings later
+            current: 0,
             deadline,
             completed: false
         };
         
         state.goals.push(newGoal);
         saveData();
-        renderGoals();
+        renderGoals(); // Only re-render goals
         showToast('Цель создана', 'success');
         e.target.reset();
     }
@@ -403,7 +385,7 @@ const App = (() => {
             goal.current += change;
             if(goal.current >= goal.target) {
                 goal.completed = true;
-                goal.current = goal.target; // Cap it
+                goal.current = goal.target;
             } else {
                 goal.completed = false;
             }
@@ -417,17 +399,14 @@ const App = (() => {
     // --- Rendering Functions ---
 
     function switchView(viewName) {
-        // Update Nav Active State
         els.navItems.forEach(item => {
             item.classList.toggle('active', item.dataset.view === viewName);
         });
         
-        // Show View
         els.views.forEach(v => v.classList.remove('active'));
         const targetView = document.getElementById(`view-${viewName}`);
         if(targetView) targetView.classList.add('active');
         
-        // Update Title
         const titles = {
             dashboard: 'Обзор',
             transactions: 'Транзакции',
@@ -437,11 +416,25 @@ const App = (() => {
         };
         els.viewTitle.textContent = titles[viewName] || 'FinTrack';
         
-        // Re-render specific views if needed to ensure fresh data/charts
-        if(viewName === 'dashboard') renderDashboardCharts();
-        if(viewName === 'transactions') renderTransactionsTable();
+        // FORCE RE-RENDER SPECIFIC SECTIONS ON SWITCH
+        if(viewName === 'dashboard') {
+            renderDashboardStats();
+            renderDashboardCharts();
+            renderRecentTransactions();
+        }
+        if(viewName === 'transactions') {
+            renderTransactionsTable();
+        }
+        if(viewName === 'categories') {
+            renderCategories();
+        }
+        if(viewName === 'goals') {
+            renderGoals();
+        }
+        if(viewName === 'settings') {
+            syncSettingsUI();
+        }
         
-        // Close mobile menu
         els.sidebar.classList.remove('open');
     }
 
@@ -501,7 +494,7 @@ const App = (() => {
         if (netChangePrev !== 0) {
             trendPercent = ((netChangeCurrent - netChangePrev) / Math.abs(netChangePrev)) * 100;
         } else if (netChangeCurrent > 0) {
-            trendPercent = 100; // Infinite growth from zero
+            trendPercent = 100;
         }
 
         const savingsRate = currentIncome > 0 ? ((currentIncome - currentExpense) / currentIncome) * 100 : 0;
@@ -517,13 +510,11 @@ const App = (() => {
     function renderDashboardStats() {
         const stats = calculateStats();
         
-        // Animate numbers roughly
         animateValue(els.totalBalance, parseFloat(els.totalBalance.innerText.replace(/\D/g,'')) || 0, stats.totalBalance, 500, formatMoney);
         els.monthIncome.textContent = formatMoney(stats.currentIncome);
         els.monthExpense.textContent = formatMoney(stats.currentExpense);
         els.savingsRate.textContent = `${Math.round(stats.savingsRate)}%`;
         
-        // Trend Badge
         const sign = stats.trendPercent >= 0 ? '+' : '';
         els.balanceTrend.textContent = `${sign}${stats.trendPercent.toFixed(1)}%`;
         els.balanceTrend.className = `trend-badge ${stats.trendPercent >= 0 ? 'positive' : 'negative'}`;
@@ -559,7 +550,6 @@ const App = (() => {
             const colorClass = isIncome ? 'green' : 'red';
             
             const div = document.createElement('div');
-            div.className = 'tx-item-mini'; // Style added via JS injection or reuse table styles
             div.style.display = 'flex';
             div.style.justifyContent = 'space-between';
             div.style.padding = '10px 0';
@@ -597,7 +587,6 @@ const App = (() => {
 
         ctx.clearRect(0, 0, width, height);
 
-        // Calculate expenses per category for current month
         const now = new Date();
         const range = getMonthRange(now.toISOString());
         
@@ -618,7 +607,6 @@ const App = (() => {
         els.expenseLegend.innerHTML = '';
 
         if (grandTotal === 0) {
-            // Draw empty circle
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
             ctx.strokeStyle = '#2a2a35';
@@ -627,7 +615,7 @@ const App = (() => {
             return;
         }
 
-        let startAngle = -0.5 * Math.PI; // Start at top
+        let startAngle = -0.5 * Math.PI; 
         
         Object.keys(catTotals).forEach(catId => {
             const amount = catTotals[catId];
@@ -645,7 +633,6 @@ const App = (() => {
             ctx.fillStyle = color;
             ctx.fill();
             
-            // Legend Item
             const li = document.createElement('li');
             li.className = 'legend-item';
             li.innerHTML = `<span class="legend-dot" style="background:${color}"></span>${cat?.name || 'Unknown'} (${Math.round(percentage*100)}%)`;
@@ -661,7 +648,6 @@ const App = (() => {
         const tbody = els.txTableBody;
         tbody.innerHTML = '';
         
-        // Apply Filters
         const search = els.txSearch.value.toLowerCase();
         const typeFilter = els.txTypeFilter.value;
         const catFilter = els.txCategoryFilter.value;
@@ -674,7 +660,6 @@ const App = (() => {
             return matchesSearch && matchesType && matchesCat;
         });
 
-        // Sort by date desc
         filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
 
         if (filtered.length === 0) {
@@ -712,7 +697,6 @@ const App = (() => {
     }
 
     function populateFilters() {
-        // Category Dropdown for Filters
         const sel = els.txCategoryFilter;
         const currentVal = sel.value;
         sel.innerHTML = '<option value="all">Все категории</option>';
@@ -722,18 +706,31 @@ const App = (() => {
             opt.textContent = cat.name;
             sel.appendChild(opt);
         });
-        sel.value = currentVal; // Restore selection if possible
+        sel.value = currentVal;
     }
 
     // Expose functions for inline handlers
     window.App = {
         editTx: (id) => openTxModal(id),
-        deleteTx: deleteTransaction
+        deleteTx: deleteTransaction,
+        deleteCat: deleteCategory,
+        updateGoal: (id, amt) => updateGoalProgress(id, amt),
+        delGoal: (id) => {
+            if(confirm('Удалить цель?')) {
+                state.goals = state.goals.filter(g => g.id !== id);
+                saveData();
+                renderGoals();
+            }
+        }
     };
 
     // --- Categories Renderer ---
     function renderCategories() {
         els.categoryList.innerHTML = '';
+        if (state.categories.length === 0) {
+            els.categoryList.innerHTML = '<li style="color:var(--text-dim)">Нет категорий</li>';
+            return;
+        }
         state.categories.forEach(cat => {
             const li = document.createElement('li');
             li.className = 'cat-item';
@@ -747,14 +744,12 @@ const App = (() => {
             els.categoryList.appendChild(li);
         });
     }
-    
-    window.App.deleteCat = deleteCategory;
 
     // --- Goals Renderer ---
     function renderGoals() {
         els.goalsContainer.innerHTML = '';
         if(state.goals.length === 0) {
-            els.goalsContainer.innerHTML = '<div class="empty-state"><p>Нет активных целей</p></div>';
+            els.goalsContainer.innerHTML = '<div class="empty-state"><p>Нет активных целей. Создайте первую!</p></div>';
             return;
         }
 
@@ -787,15 +782,6 @@ const App = (() => {
             els.goalsContainer.appendChild(div);
         });
     }
-    
-    window.App.updateGoal = (id, amt) => updateGoalProgress(id, amt);
-    window.App.delGoal = (id) => {
-        if(confirm('Удалить цель?')) {
-            state.goals = state.goals.filter(g => g.id !== id);
-            saveData();
-            renderGoals();
-        }
-    };
 
     // --- Settings Helpers ---
     function syncSettingsUI() {
@@ -833,7 +819,7 @@ const App = (() => {
             }
         };
         reader.readAsText(file);
-        e.target.value = ''; // Reset input
+        e.target.value = '';
     }
 
     function resetData() {
@@ -870,5 +856,4 @@ const App = (() => {
     return { init };
 })();
 
-// Boot up
 document.addEventListener('DOMContentLoaded', App.init);
