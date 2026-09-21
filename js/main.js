@@ -1,177 +1,124 @@
-// ===================================
-// Aroma Coffee House - Interactive JS
-// ===================================
+/**
+ * FinTrack Application Logic
+ * Pure Vanilla JS, No Frameworks
+ */
 
-document.addEventListener('DOMContentLoaded', function() {
+const App = (() => {
+    // --- State Management ---
+    const STORAGE_KEY = 'fintrack_data_v1';
     
-    // Мобильное меню
-    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-    const navMenu = document.querySelector('.nav-menu');
-    
-    if (mobileMenuBtn) {
-        mobileMenuBtn.addEventListener('click', function() {
-            navMenu.classList.toggle('active');
-            
-            // Анимация иконки бургера
-            const spans = this.querySelectorAll('span');
-            if (navMenu.classList.contains('active')) {
-                spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
-                spans[1].style.opacity = '0';
-                spans[2].style.transform = 'rotate(-45deg) translate(7px, -6px)';
-            } else {
-                spans[0].style.transform = 'none';
-                spans[1].style.opacity = '1';
-                spans[2].style.transform = 'none';
-            }
-        });
-    }
-    
-    // Закрытие меню при клике на ссылку
-    const navLinks = document.querySelectorAll('.nav-menu a');
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            navMenu.classList.remove('active');
-            const spans = mobileMenuBtn.querySelectorAll('span');
-            spans[0].style.transform = 'none';
-            spans[1].style.opacity = '1';
-            spans[2].style.transform = 'none';
-        });
-    });
-    
-    // Плавная прокрутка для якорных ссылок
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                const offsetTop = target.offsetTop - 80;
-                window.scrollTo({
-                    top: offsetTop,
-                    behavior: 'smooth'
-                });
-            }
-        });
-    });
-    
-    // Анимация появления элементов при скролле
-    const revealElements = document.querySelectorAll('.reveal');
-    
-    const revealOnScroll = () => {
-        const windowHeight = window.innerHeight;
-        const elementVisible = 150;
-        
-        revealElements.forEach(element => {
-            const elementTop = element.getBoundingClientRect().top;
-            
-            if (elementTop < windowHeight - elementVisible) {
-                element.classList.add('active');
-            }
-        });
-    };
-    
-    window.addEventListener('scroll', revealOnScroll);
-    revealOnScroll(); // Проверяем при загрузке
-    
-    // Изменение навбара при скролле
-    const navbar = document.querySelector('.navbar');
-    let lastScroll = 0;
-    
-    window.addEventListener('scroll', () => {
-        const currentScroll = window.pageYOffset;
-        
-        if (currentScroll > 100) {
-            navbar.style.background = 'rgba(13, 13, 13, 0.98)';
-            navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.5)';
-        } else {
-            navbar.style.background = 'rgba(13, 13, 13, 0.95)';
-            navbar.style.boxShadow = 'none';
+    let state = {
+        transactions: [],
+        categories: [
+            { id: 'food', name: 'Продукты', color: '#f87171', icon: 'tag' },
+            { id: 'transport', name: 'Транспорт', color: '#60a5fa', icon: 'list' },
+            { id: 'entertainment', name: 'Развлечения', color: '#a78bfa', icon: 'target' },
+            { id: 'housing', name: 'Жильё', color: '#34d399', icon: 'home' },
+            { id: 'salary', name: 'Зарплата', color: '#4ade80', icon: 'arrow-up' },
+            { id: 'other', name: 'Другое', color: '#9ca3af', icon: 'plus' }
+        ],
+        goals: [],
+        settings: {
+            currency: 'RUB',
+            firstDayOfWeek: 1
         }
+    };
+
+    const currencies = {
+        RUB: { symbol: '₽', code: 'RUB' },
+        USD: { symbol: '$', code: 'USD' },
+        EUR: { symbol: '€', code: 'EUR' },
+        KZT: { symbol: '₸', code: 'KZT' },
+        UAH: { symbol: '₴', code: 'UAH' }
+    };
+
+    // --- DOM Elements Cache ---
+    const els = {};
+
+    // --- Initialization ---
+    function init() {
+        cacheDOMElements();
+        loadData();
+        bindEvents();
+        renderAllViews();
+        setupKeyboardShortcuts();
+    }
+
+    function cacheDOMElements() {
+        els.sidebar = document.getElementById('sidebar');
+        els.mobileToggle = document.getElementById('mobileToggle');
+        els.navItems = document.querySelectorAll('.nav-item');
+        els.views = document.querySelectorAll('.view-section');
+        els.viewTitle = document.getElementById('viewTitle');
+        els.addTxBtn = document.getElementById('addTransactionBtn');
         
-        lastScroll = currentScroll;
-    });
-    
-    // Обработка формы бронирования
-    const bookingForm = document.getElementById('bookingForm');
-    
-    if (bookingForm) {
-        bookingForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Получаем данные формы
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData);
-            
-            // Валидация телефона
-            const phoneRegex = /^\+?[0-9\s\-\(\)]{10,}$/;
-            if (!phoneRegex.test(data.phone)) {
-                alert('Пожалуйста, введите корректный номер телефона');
-                return;
-            }
-            
-            // Валидация даты (не в прошлом)
-            const selectedDate = new Date(data.date);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            if (selectedDate < today) {
-                alert('Дата бронирования не может быть в прошлом');
-                return;
-            }
-            
-            // Имитация отправки
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = 'Отправка...';
-            submitBtn.disabled = true;
-            
-            setTimeout(() => {
-                alert(`Спасибо, ${data.name}! Ваша бронь подтверждена.\n\n` +
-                      `Дата: ${data.date}\n` +
-                      `Время: ${data.time}\n` +
-                      `Гостей: ${data.guests}\n\n` +
-                      `Мы свяжемся с вами по телефону ${data.phone} для подтверждения.`);
-                
-                this.reset();
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
-            }, 1500);
-        });
+        // Modal
+        els.txModal = document.getElementById('txModal');
+        els.txForm = document.getElementById('txForm');
+        els.closeTxModal = document.getElementById('closeTxModal');
+        els.cancelTxBtn = document.getElementById('cancelTxBtn');
+        els.txTypeBtns = document.querySelectorAll('.type-btn');
+        els.txTypeInput = document.getElementById('txType');
+        els.txCategorySelect = document.getElementById('txCategory');
+        els.txDateInput = document.getElementById('txDate');
+        
+        // Dashboard
+        els.totalBalance = document.getElementById('totalBalance');
+        els.balanceTrend = document.getElementById('balanceTrend');
+        els.monthIncome = document.getElementById('monthIncome');
+        els.monthExpense = document.getElementById('monthExpense');
+        els.savingsRate = document.getElementById('savingsRate');
+        els.recentTxList = document.getElementById('recentTransactionsList');
+        
+        // Charts Canvases
+        els.expenseDonutCanvas = document.getElementById('expenseDonut');
+        els.donutTotal = document.getElementById('donutTotal');
+        els.expenseLegend = document.getElementById('expenseLegend');
+        
+        // Transactions View
+        els.txTableBody = document.getElementById('transactionsTableBody');
+        els.txSearch = document.getElementById('txSearch');
+        els.txTypeFilter = document.getElementById('txTypeFilter');
+        els.txCategoryFilter = document.getElementById('txCategoryFilter');
+        els.emptyStateTx = document.getElementById('emptyStateTx');
+        
+        // Categories View
+        els.categoryList = document.getElementById('categoryList');
+        els.categoryForm = document.getElementById('categoryForm');
+        
+        // Goals View
+        els.goalsContainer = document.getElementById('goalsContainer');
+        els.goalForm = document.getElementById('goalForm');
+        
+        // Settings
+        els.currencySelect = document.getElementById('currencySelect');
+        els.exportBtn = document.getElementById('exportDataBtn');
+        els.importInput = document.getElementById('importFileInput');
+        els.resetBtn = document.getElementById('resetDataBtn');
+        
+        // Toast
+        els.toastContainer = document.getElementById('toastContainer');
     }
-    
-    // Установка минимальной даты в форме (сегодня)
-    const dateInput = document.getElementById('date');
-    if (dateInput) {
-        const today = new Date().toISOString().split('T')[0];
-        dateInput.setAttribute('min', today);
+
+    // --- Data Persistence ---
+    function saveData() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {
+            showToast('Ошибка сохранения данных', 'error');
+        }
     }
-    
-    // Параллакс эффект для hero секции
-    const hero = document.querySelector('.hero');
-    
-    if (hero) {
-        window.addEventListener('scroll', () => {
-            const scrolled = window.pageYOffset;
-            const rate = scrolled * 0.5;
-            
-            if (scrolled < window.innerHeight) {
-                hero.style.backgroundPositionY = `${rate}px`;
-            }
-        });
-    }
-    
-    // Эффект свечения при движении мыши для карточек
-    const cards = document.querySelectorAll('.menu-card, .review-card');
-    
-    cards.forEach(card => {
-        card.addEventListener('mousemove', (e) => {
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            card.style.setProperty('--mouse-x', `${x}px`);
-            card.style.setProperty('--mouse-y', `${y}px`);
-        });
-    });
-    
-    console.log('☕ Aroma Coffee House website loaded successfully!');
-});
+
+    function loadData() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                // Merge with defaults to handle schema changes
+                state = { ...state, ...parsed };
+                // Ensure arrays exist
+                if (!Array.isArray(state.transactions)) state.transactions = [];
+                if (!Array.isArray(state.categories)) state.categories = [];
+                if (!Array.isArray(state.goals)) state.goals = [];
+            } catch (e) {
+                console.error("
