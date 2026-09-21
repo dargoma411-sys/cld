@@ -1,3 +1,9 @@
+"use strict";
+/* ==================================================================
+   FLUX · личный финансовый трекер
+   HTML + CSS + JS, без фреймворков. Данные — localStorage.
+   ================================================================== */
+
 /* ============================ ICON LIBRARY ============================ */
 const ICONS = {
   wallet:'<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>',
@@ -51,38 +57,95 @@ const DEFAULT_CATEGORIES = [
   { id:'c_other_out', name:'Другое', type:'expense', icon:'tag', color:'#94a3b8' }
 ];
 
+const CURRENCIES = {
+  RUB:{ symbol:'₽', code:'RUB', label:'Рубль',     labelEn:'Ruble' },
+  USD:{ symbol:'$', code:'USD', label:'Доллар',    labelEn:'US Dollar' },
+  EUR:{ symbol:'€', code:'EUR', label:'Евро',      labelEn:'Euro' },
+  KZT:{ symbol:'₸', code:'KZT', label:'Тенге',     labelEn:'Tenge' },
+  UAH:{ symbol:'₴', code:'UAH', label:'Гривна',    labelEn:'Hryvnia' },
+  BYN:{ symbol:'Br',code:'BYN', label:'Бел. рубль',labelEn:'Belarusian Ruble' },
+  GBP:{ symbol:'£', code:'GBP', label:'Фунт',      labelEn:'Pound' },
+  CNY:{ symbol:'¥', code:'CNY', label:'Юань',      labelEn:'Yuan' },
+  JPY:{ symbol:'¥', code:'JPY', label:'Иена',      labelEn:'Yen' },
+  TRY:{ symbol:'₺', code:'TRY', label:'Лира',      labelEn:'Lira' },
+  AED:{ symbol:'د.إ', code:'AED', label:'Дирхам',  labelEn:'Dirham' },
+  CHF:{ symbol:'₣', code:'CHF', label:'Франк',     labelEn:'Franc' },
+  PLN:{ symbol:'zł',code:'PLN', label:'Злотый',    labelEn:'Zloty' },
+  CAD:{ symbol:'C$',code:'CAD', label:'Кан. доллар',labelEn:'Canadian Dollar' }
+};
+
+// rate[X] = сколько единиц X за 1 единицу базовой валюты
+const DEFAULT_RATES = {
+  RUB:1, USD:0.011, EUR:0.010, KZT:5.5, UAH:0.45, BYN:0.036,
+  GBP:0.0085, CNY:0.08, JPY:1.7, TRY:0.38, AED:0.04, CHF:0.0095, PLN:0.045, CAD:0.015
+};
+
+const PLAN_PRIORITIES = ['high','medium','low'];
+
+const I18N = {
+  ru:{
+    overview:'Обзор', transactions:'Транзакции', categories:'Категории',
+    goals:'Цели', plan:'План', settings:'Настройки', add:'Добавить',
+    plan_title:'План покупок', plan_sub:'Запланированные траты и крупные цели',
+    plan_add:'Добавить покупку',
+    plan_total:'Всего запланировано', plan_count:'Покупок в плане',
+    plan_next:'Ближайшая', plan_none:'Пусто',
+    plan_mark_bought:'Отметить как куплено', plan_edit:'Изменить',
+    plan_delete:'Удалить', plan_bought:'Куплено',
+    plan_due:'до', plan_priority:'Приоритет',
+    prio_high:'Высокий', prio_medium:'Средний', prio_low:'Низкий',
+    set_lang:'Язык интерфейса', set_lang_desc:'Русский или английский',
+    set_base:'Базовая валюта', set_base_desc:'В ней ведётся учёт; остальные — по курсу',
+    set_rates:'Курсы валют', set_rates_desc:'Сколько единиц валюты за 1 единицу базовой',
+    rates_title:'Курсы валют', rates_hint:'1 единица базовой валюты = указанное число единиц валюты справа'
+  },
+  en:{
+    overview:'Overview', transactions:'Transactions', categories:'Categories',
+    goals:'Goals', plan:'Plan', settings:'Settings', add:'Add',
+    plan_title:'Purchase plan', plan_sub:'Planned expenses and big purchases',
+    plan_add:'Add purchase',
+    plan_total:'Total planned', plan_count:'Items in plan',
+    plan_next:'Next', plan_none:'None',
+    plan_mark_bought:'Mark as bought', plan_edit:'Edit',
+    plan_delete:'Delete', plan_bought:'Bought',
+    plan_due:'due', plan_priority:'Priority',
+    prio_high:'High', prio_medium:'Medium', prio_low:'Low',
+    set_lang:'Interface language', set_lang_desc:'Russian or English',
+    set_base:'Base currency', set_base_desc:'All amounts are stored in it; others by rate',
+    set_rates:'Currency rates', set_rates_desc:'Units of currency per 1 unit of base',
+    rates_title:'Currency rates', rates_hint:'1 unit of base currency = N units of target currency'
+  }
+};
+function t(key){ return (I18N[state.settings.lang]||I18N.ru)[key] || key; }
+
+const STORAGE_KEY = 'flux_finance_v1';
+
 let state = {
   transactions: [],
   categories: [],
   goals: [],
-  settings: { currency:'RUB', weekStart:1, theme:'dark' }
+  plan: [],
+  rates: Object.assign({}, DEFAULT_RATES),
+  settings: { currency:'RUB', weekStart:1, theme:'dark', lang:'ru' }
 };
 let editingTxId = null;
 let editingGoalId = null;
-
-const CURRENCIES = {
-  RUB:{ symbol:'₽', code:'RUB', label:'Рубль' },
-  USD:{ symbol:'$', code:'USD', label:'Доллар' },
-  EUR:{ symbol:'€', code:'EUR', label:'Евро' },
-  KZT:{ symbol:'₸', code:'KZT', label:'Тенге' },
-  UAH:{ symbol:'₴', code:'UAH', label:'Гривна' }
-};
-
-const STORAGE_KEY = 'flux_finance_v1';
+let editingPlanId = null;
 
 /* ============================ UTILS ============================ */
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
 function todayISO(){ const d=new Date(); return d.toISOString().slice(0,10); }
 function monthKey(iso){ return iso.slice(0,7); }
+
 function formatMoney(n){
-  const cur = CURRENCIES[state.settings.currency];
+  const cur = CURRENCIES[state.settings.currency] || CURRENCIES.RUB;
   const sign = n < 0 ? '−' : '';
   const abs = Math.abs(n);
   const formatted = abs.toLocaleString('ru-RU',{ minimumFractionDigits:0, maximumFractionDigits:2 });
   return sign + formatted + ' ' + cur.symbol;
 }
 function formatMoneyShort(n){
-  const cur = CURRENCIES[state.settings.currency];
+  const cur = CURRENCIES[state.settings.currency] || CURRENCIES.RUB;
   if (Math.abs(n) >= 1000000) return (n/1000000).toFixed(1).replace('.0','') + 'м ' + cur.symbol;
   if (Math.abs(n) >= 1000) return (n/1000).toFixed(1).replace('.0','') + 'к ' + cur.symbol;
   return Math.round(n) + ' ' + cur.symbol;
@@ -116,11 +179,26 @@ function iconSvg(name, size){
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" ${size?`width="${size}" height="${size}"`:''}>${path}</svg>`;
 }
 
+/* Конвертация (для отображения в другой валюте) */
+function convertTo(amount, targetCode){
+  const base = state.settings.currency;
+  if(targetCode === base) return amount;
+  const r = state.rates[targetCode];
+  if(!r) return amount;
+  return amount * r;
+}
+function convertFrom(amount, fromCode){
+  const base = state.settings.currency;
+  if(fromCode === base) return amount;
+  const r = state.rates[fromCode];
+  if(!r) return amount;
+  return amount / r;
+}
+
 /* ============================ STORAGE ============================ */
 function save(){
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }catch(e){ console.warn('save error', e); }
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e){ console.warn('save error', e); }
 }
 function load(){
   try{
@@ -130,9 +208,13 @@ function load(){
       state.transactions = Array.isArray(parsed.transactions) ? parsed.transactions : [];
       state.categories = Array.isArray(parsed.categories) && parsed.categories.length ? parsed.categories : DEFAULT_CATEGORIES.slice();
       state.goals = Array.isArray(parsed.goals) ? parsed.goals : [];
-      state.settings = Object.assign({ currency:'RUB', weekStart:1, theme:'dark' }, parsed.settings||{});
+      state.plan = Array.isArray(parsed.plan) ? parsed.plan : [];
+      state.rates = Object.assign({}, DEFAULT_RATES, parsed.rates||{});
+      state.settings = Object.assign({ currency:'RUB', weekStart:1, theme:'dark', lang:'ru' }, parsed.settings||{});
     } else {
       state.categories = DEFAULT_CATEGORIES.slice();
+      state.rates = Object.assign({}, DEFAULT_RATES);
+      state.plan = [];
       seedDemo();
     }
   }catch(e){
@@ -161,6 +243,11 @@ function seedDemo(){
   state.goals = [
     { id: uid(), name:'Отпуск', target:120000, current:45000, deadline: new Date(y, m+4, 1).toISOString().slice(0,10) },
     { id: uid(), name:'Новый ноутбук', target:90000, current:90000, deadline: new Date(y, m+2, 1).toISOString().slice(0,10) }
+  ];
+  state.plan = [
+    { id:uid(), name:'Новый ноутбук', amount:90000, deadline:new Date(y, m+2, 1).toISOString().slice(0,10), categoryId:'c_other_out', priority:'high', bought:false },
+    { id:uid(), name:'Отпуск', amount:150000, deadline:new Date(y, m+4, 1).toISOString().slice(0,10), categoryId:'c_entertainment', priority:'medium', bought:false },
+    { id:uid(), name:'Наушники', amount:12000, deadline:'', categoryId:'c_other_out', priority:'low', bought:false }
   ];
   save();
 }
@@ -216,6 +303,7 @@ function switchScreen(name){
   if(name==='transactions') renderTransactions();
   if(name==='categories') renderCategories();
   if(name==='goals') renderGoals();
+  if(name==='plan') renderPlan();
   if(name==='settings') renderSettings();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -254,6 +342,7 @@ function renderOverview(){
 }
 
 function animateNumber(el, to, fmt){
+  if(!el) return;
   const from = parseFloat(el.dataset.val || '0') || 0;
   el.dataset.val = to;
   const dur = 600;
@@ -271,6 +360,7 @@ function animateNumber(el, to, fmt){
 
 function renderBarChart(){
   const wrap = document.getElementById('barChart');
+  if(!wrap) return;
   const months = last12Months();
   const data = months.map(k => monthTotals(k));
   const max = Math.max(1, ...data.map(d => Math.max(d.income, d.expense)));
@@ -312,6 +402,7 @@ function renderBarChart(){
 function renderDonut(){
   const wrap = document.getElementById('donutChart');
   const legend = document.getElementById('donutLegend');
+  if(!wrap || !legend) return;
   const map = categoryTotalsForMonth(currentMonthKey(), 'expense');
   const entries = Object.entries(map).map(([id,val]) => ({ cat: categoryById(id), val })).filter(e => e.cat && e.val>0);
   const total = entries.reduce((s,e) => s+e.val, 0);
@@ -355,6 +446,7 @@ function renderDonut(){
 
 function renderRecent(){
   const list = document.getElementById('recentList');
+  if(!list) return;
   const recent = state.transactions.slice().sort((a,b) => (b.date+b.id).localeCompare(a.date+a.id)).slice(0,5);
   if(!recent.length){
     list.innerHTML = `<div class="empty">
@@ -383,6 +475,7 @@ function renderRecent(){
 function populateFilters(){
   const catFilter = document.getElementById('txCatFilter');
   const monthFilter = document.getElementById('txMonthFilter');
+  if(!catFilter || !monthFilter) return;
   const curCat = catFilter.value;
   const curMonth = monthFilter.value;
 
@@ -398,10 +491,10 @@ function populateFilters(){
 }
 
 function getFilteredTransactions(){
-  const q = document.getElementById('txSearch').value.trim().toLowerCase();
-  const type = document.getElementById('txTypeFilter').value;
-  const cat = document.getElementById('txCatFilter').value;
-  const month = document.getElementById('txMonthFilter').value;
+  const q = (document.getElementById('txSearch')?.value || '').trim().toLowerCase();
+  const type = document.getElementById('txTypeFilter')?.value || 'all';
+  const cat = document.getElementById('txCatFilter')?.value || 'all';
+  const month = document.getElementById('txMonthFilter')?.value || 'all';
 
   return state.transactions.filter(t => {
     if(type!=='all' && t.type!==type) return false;
@@ -416,7 +509,9 @@ function renderTransactions(){
   populateFilters();
   const list = getFilteredTransactions();
   const table = document.getElementById('txTable');
-  document.getElementById('txCount').textContent = state.transactions.length + ' операций';
+  const cnt = document.getElementById('txCount');
+  if(!table) return;
+  if(cnt) cnt.textContent = state.transactions.length + ' операций';
 
   if(!list.length){
     table.innerHTML = `<div class="empty">
@@ -455,6 +550,7 @@ document.querySelectorAll('[data-cat-tab]').forEach(t => {
 
 function renderCategories(){
   const grid = document.getElementById('catGrid');
+  if(!grid) return;
   const cats = state.categories.filter(c => c.type===catTab);
   const totals = categoryTotalsForMonth(currentMonthKey(), catTab);
 
@@ -485,6 +581,7 @@ function renderCategories(){
 /* ============================ RENDER: GOALS ============================ */
 function renderGoals(){
   const grid = document.getElementById('goalsGrid');
+  if(!grid) return;
   if(!state.goals.length){
     grid.innerHTML = `<div class="empty" style="grid-column:1/-1">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
@@ -526,10 +623,90 @@ function renderGoals(){
   });
 }
 
+/* ============================ RENDER: PLAN ============================ */
+function renderPlan(){
+  const grid = document.getElementById('planGrid');
+  const summary = document.getElementById('planSummary');
+  if(!grid || !summary) return;
+
+  const active = state.plan.filter(p => !p.bought);
+  const total = active.reduce((s,p) => s + p.amount, 0);
+  const next = active.slice().sort((a,b) => (a.deadline||'9999').localeCompare(b.deadline||'9999'))[0];
+
+  summary.innerHTML = `
+    <div class="card">
+      <div class="lbl">${t('plan_total')}</div>
+      <div class="val">${formatMoney(total)}</div>
+    </div>
+    <div class="card">
+      <div class="lbl">${t('plan_count')}</div>
+      <div class="val">${active.length}</div>
+    </div>
+    <div class="card">
+      <div class="lbl">${t('plan_next')}</div>
+      <div class="val" style="font-size:15px">${next ? escapeHtml(next.name) : t('plan_none')}</div>
+    </div>
+  `;
+
+  if(!state.plan.length){
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1">
+      <div class="empty-title">${t('plan_none')}</div>
+      <div class="empty-sub">${t('plan_add')}</div>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = state.plan.slice().sort((a,b) => {
+    if(a.bought !== b.bought) return a.bought ? 1 : -1;
+    return (a.deadline||'9999').localeCompare(b.deadline||'9999');
+  }).map(p => {
+    const cat = categoryById(p.categoryId);
+    const prio = t('prio_'+p.priority);
+    const prioCls = p.priority==='high'?'hi':p.priority==='medium'?'mid':'lo';
+    return `<div class="plan-card ${p.bought?'bought':''}" data-plan="${p.id}">
+      <div class="plan-head">
+        <div>
+          <div class="plan-name">${escapeHtml(p.name)}</div>
+          <div class="plan-cat">${cat?escapeHtml(cat.name):''}</div>
+        </div>
+      </div>
+      <div class="plan-amount">${formatMoney(p.amount)}</div>
+      <div class="plan-meta">
+        ${p.deadline?`<span class="chip-mini">${t('plan_due')} ${formatDate(p.deadline)}</span>`:''}
+        <span class="chip-mini ${prioCls}">${prio}</span>
+      </div>
+      <div class="plan-actions">
+        ${p.bought
+          ? `<button class="btn btn-ghost" disabled>${t('plan_bought')}</button>`
+          : `<button class="btn btn-primary" data-plan-buy="${p.id}">${t('plan_mark_bought')}</button>`}
+        <button class="btn btn-ghost" data-plan-edit="${p.id}">${t('plan_edit')}</button>
+        <button class="btn btn-danger" data-plan-del="${p.id}">${t('plan_delete')}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 /* ============================ RENDER: SETTINGS ============================ */
 function renderSettings(){
-  document.getElementById('setCurrency').value = state.settings.currency;
-  document.getElementById('setWeekStart').value = state.settings.weekStart;
+  const langEl = document.getElementById('setLang');
+  const curEl = document.getElementById('setCurrency');
+  const wsEl = document.getElementById('setWeekStart');
+  if(langEl) langEl.value = state.settings.lang;
+  if(curEl) curEl.value = state.settings.currency;
+  if(wsEl) wsEl.value = state.settings.weekStart;
+}
+
+/* ============================ LANG ============================ */
+function applyLang(){
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.dataset.i18n;
+    const v = t(k);
+    if(v) el.textContent = v;
+  });
+  document.getElementById('themeLabel').textContent =
+    state.settings.theme==='dark'
+      ? (state.settings.lang==='en' ? 'Light theme' : 'Светлая тема')
+      : (state.settings.lang==='en' ? 'Dark theme' : 'Тёмная тема');
 }
 
 /* ============================ MODAL ============================ */
@@ -549,6 +726,7 @@ function closeModal(){
   document.body.style.overflow = '';
   editingTxId = null;
   editingGoalId = null;
+  editingPlanId = null;
 }
 overlay.addEventListener('click', e => { if(e.target===overlay) closeModal(); });
 document.querySelectorAll('[data-action="close-modal"]').forEach(b => b.addEventListener('click', closeModal));
@@ -839,6 +1017,105 @@ function openGoalTopUp(goal){
   openModal();
 }
 
+/* --- Plan modal --- */
+function openPlanModal(item){
+  editingPlanId = item ? item.id : null;
+  modalTitle.textContent = item ? t('plan_edit') : t('plan_add');
+  const cats = state.categories.filter(c => c.type==='expense');
+  modalBody.innerHTML = `
+    <div class="form-group">
+      <label class="form-label">Название</label>
+      <input class="form-input" id="planName" type="text" maxlength="80" value="${item?escapeHtml(item.name):''}" placeholder="Новый телефон">
+    </div>
+    <div class="plan-form-row">
+      <div class="form-group">
+        <label class="form-label">Сумма</label>
+        <input class="form-input" id="planAmount" type="number" min="1" step="1" value="${item?item.amount:''}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">${t('plan_due')}</label>
+        <input class="form-input" id="planDeadline" type="date" value="${item&&item.deadline?item.deadline:''}">
+      </div>
+    </div>
+    <div class="plan-form-row">
+      <div class="form-group">
+        <label class="form-label">Категория</label>
+        <select class="form-input" id="planCategory">
+          <option value="">—</option>
+          ${cats.map(c => `<option value="${c.id}" ${item&&item.categoryId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">${t('plan_priority')}</label>
+        <select class="form-input" id="planPriority">
+          ${PLAN_PRIORITIES.map(p => `<option value="${p}" ${(item&&item.priority===p)||(!item&&p==='medium')?'selected':''}>${t('prio_'+p)}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+  `;
+  modalFoot.innerHTML = `
+    <button class="btn btn-ghost" data-action="close-modal">Отмена</button>
+    <button class="btn btn-primary" id="savePlan">${item?'Сохранить':'Создать'}</button>
+  `;
+  document.getElementById('savePlan').addEventListener('click', () => {
+    const name = document.getElementById('planName').value.trim();
+    const amount = parseFloat(document.getElementById('planAmount').value);
+    const deadline = document.getElementById('planDeadline').value;
+    const categoryId = document.getElementById('planCategory').value;
+    const priority = document.getElementById('planPriority').value;
+    if(!name || !amount || amount<=0) return;
+
+    if(editingPlanId){
+      const p = state.plan.find(x => x.id===editingPlanId);
+      Object.assign(p, { name, amount, deadline, categoryId, priority });
+      toast('План обновлён', 'success');
+    } else {
+      state.plan.push({ id:uid(), name, amount, deadline, categoryId, priority, bought:false });
+      toast('Покупка добавлена в план', 'success');
+    }
+    save();
+    closeModal();
+    renderPlan();
+  });
+  document.querySelectorAll('#modalFoot [data-action="close-modal"]').forEach(b => b.addEventListener('click', closeModal));
+  openModal();
+}
+
+/* --- Rates modal --- */
+function openRatesModal(){
+  modalTitle.textContent = t('rates_title');
+  const base = state.settings.currency;
+  modalBody.innerHTML = `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">${t('rates_hint')} (${CURRENCIES[base].symbol} ${base})</p>
+    <div style="display:grid;gap:10px">
+      ${Object.keys(CURRENCIES).filter(c=>c!==base).map(c=>`
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="min-width:70px;font-family:'JetBrains Mono',monospace;font-size:12px">${CURRENCIES[c].symbol} ${c}</span>
+          <input class="form-input" type="number" step="0.0001" min="0"
+                 data-rate="${c}" value="${state.rates[c]||1}" style="flex:1">
+        </div>
+      `).join('')}
+    </div>
+  `;
+  modalFoot.innerHTML = `
+    <button class="btn btn-ghost" data-action="close-modal">Отмена</button>
+    <button class="btn btn-primary" id="saveRates">Сохранить</button>
+  `;
+  document.getElementById('saveRates').addEventListener('click', () => {
+    modalBody.querySelectorAll('input[data-rate]').forEach(inp => {
+      const v = parseFloat(inp.value);
+      if(v>0) state.rates[inp.dataset.rate] = v;
+    });
+    state.rates[state.settings.currency] = 1;
+    save();
+    closeModal();
+    refreshAll();
+    toast('Курсы сохранены', 'success');
+  });
+  document.querySelectorAll('#modalFoot [data-action="close-modal"]').forEach(b => b.addEventListener('click', closeModal));
+  openModal();
+}
+
 /* ============================ EVENTS ============================ */
 document.addEventListener('click', e => {
   const newTx = e.target.closest('[data-action="new-tx"]');
@@ -847,6 +1124,8 @@ document.addEventListener('click', e => {
   if(newCat){ openCategoryModal(); return; }
   const newGoal = e.target.closest('[data-action="new-goal"]');
   if(newGoal){ openGoalModal(); return; }
+  const newPlan = e.target.closest('[data-action="new-plan"]');
+  if(newPlan){ openPlanModal(); return; }
 
   const edit = e.target.closest('[data-edit]');
   if(edit){
@@ -889,26 +1168,81 @@ document.addEventListener('click', e => {
     toast('Цель удалена', 'info');
     return;
   }
+
+  // PLAN actions
+  const planBuy = e.target.closest('[data-plan-buy]');
+  if(planBuy){
+    const p = state.plan.find(x => x.id===planBuy.dataset.planBuy);
+    if(p){
+      state.transactions.push({
+        id:uid(), type:'expense', amount:p.amount,
+        date: todayISO(), categoryId: p.categoryId || '',
+        comment: p.name
+      });
+      p.bought = true;
+      save(); refreshAll();
+      toast('Куплено — транзакция создана', 'success');
+    }
+    return;
+  }
+  const planEdit = e.target.closest('[data-plan-edit]');
+  if(planEdit){
+    const p = state.plan.find(x => x.id===planEdit.dataset.planEdit);
+    if(p) openPlanModal(p);
+    return;
+  }
+  const planDel = e.target.closest('[data-plan-del]');
+  if(planDel){
+    state.plan = state.plan.filter(x => x.id!==planDel.dataset.planDel);
+    save(); renderPlan();
+    toast('Удалено из плана', 'info');
+    return;
+  }
 });
 
 ['txSearch','txTypeFilter','txCatFilter','txMonthFilter'].forEach(id => {
   const el = document.getElementById(id);
+  if(!el) return;
   el.addEventListener('input', renderTransactions);
   el.addEventListener('change', renderTransactions);
 });
 
+document.getElementById('setLang').addEventListener('change', e => {
+  state.settings.lang = e.target.value;
+  save();
+  applyLang();
+  refreshAll();
+});
+
 document.getElementById('setCurrency').addEventListener('change', e => {
-  state.settings.currency = e.target.value;
+  const oldBase = state.settings.currency;
+  const newBase = e.target.value;
+  if(oldBase === newBase) return;
+
+  const oldR = state.rates[oldBase] || 1;
+  const newR = state.rates[newBase] || 1;
+  const factor = newR / oldR;
+
+  state.transactions.forEach(t => t.amount = +(t.amount * factor).toFixed(2));
+  state.goals.forEach(g => {
+    g.target  = +(g.target  * factor).toFixed(2);
+    g.current = +(g.current * factor).toFixed(2);
+  });
+  state.plan.forEach(p => p.amount = +(p.amount * factor).toFixed(2));
+
+  state.settings.currency = newBase;
   save();
   refreshAll();
-  toast('Валюта изменена', 'info');
+  toast(t('set_base')+': '+(CURRENCIES[newBase]?.symbol||''), 'info');
 });
+
 document.getElementById('setWeekStart').addEventListener('change', e => {
   state.settings.weekStart = parseInt(e.target.value);
   save();
   toast('Настройка сохранена', 'info');
 });
 document.getElementById('setThemeBtn').addEventListener('click', toggleTheme);
+document.getElementById('editRatesBtn').addEventListener('click', openRatesModal);
 
 document.getElementById('exportBtn').addEventListener('click', () => {
   const data = JSON.stringify(state, null, 2);
@@ -933,9 +1267,12 @@ document.getElementById('importInput').addEventListener('change', e => {
       state.transactions = Array.isArray(parsed.transactions) ? parsed.transactions : [];
       state.categories = Array.isArray(parsed.categories) && parsed.categories.length ? parsed.categories : DEFAULT_CATEGORIES.slice();
       state.goals = Array.isArray(parsed.goals) ? parsed.goals : [];
-      state.settings = Object.assign({ currency:'RUB', weekStart:1, theme:'dark' }, parsed.settings||{});
+      state.plan = Array.isArray(parsed.plan) ? parsed.plan : [];
+      state.rates = Object.assign({}, DEFAULT_RATES, parsed.rates||{});
+      state.settings = Object.assign({ currency:'RUB', weekStart:1, theme:'dark', lang:'ru' }, parsed.settings||{});
       save();
       applyTheme();
+      applyLang();
       refreshAll();
       toast('Данные импортированы', 'success');
     }catch(err){
@@ -949,7 +1286,11 @@ document.getElementById('importInput').addEventListener('change', e => {
 document.getElementById('resetBtn').addEventListener('click', () => {
   if(!confirm('Удалить все данные? Это действие нельзя отменить.')) return;
   localStorage.removeItem(STORAGE_KEY);
-  state = { transactions:[], categories:DEFAULT_CATEGORIES.slice(), goals:[], settings:{ currency:'RUB', weekStart:1, theme:state.settings.theme } };
+  state = {
+    transactions:[], categories:DEFAULT_CATEGORIES.slice(), goals:[], plan:[],
+    rates:Object.assign({}, DEFAULT_RATES),
+    settings:{ currency:'RUB', weekStart:1, theme:state.settings.theme, lang:state.settings.lang }
+  };
   save();
   refreshAll();
   toast('Данные сброшены', 'info');
@@ -963,7 +1304,7 @@ function toggleTheme(){
 }
 function applyTheme(){
   document.documentElement.setAttribute('data-theme', state.settings.theme);
-  document.getElementById('themeLabel').textContent = state.settings.theme==='dark' ? 'Светлая тема' : 'Тёмная тема';
+  applyLang();
 }
 document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 document.getElementById('themeToggleMobile').addEventListener('click', toggleTheme);
@@ -988,6 +1329,7 @@ function toast(msg, type){
 /* ============================ PAGE PROGRESS ============================ */
 function pageProgress(){
   const bar = document.getElementById('pageProgress');
+  if(!bar) return;
   bar.style.opacity = '1';
   bar.style.width = '30%';
   setTimeout(() => bar.style.width = '70%', 120);
@@ -1002,6 +1344,7 @@ function refreshAll(){
   renderTransactions();
   renderCategories();
   renderGoals();
+  renderPlan();
   renderSettings();
 }
 
@@ -1009,6 +1352,7 @@ function refreshAll(){
 function init(){
   load();
   applyTheme();
+  applyLang();
   pageProgress();
   refreshAll();
   switchScreen('overview');
