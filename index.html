@@ -44,23 +44,27 @@
     <nav class="nav">
       <button class="nav-item active" data-screen="overview">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
-        Обзор
+        <span data-i18n="overview">Обзор</span>
       </button>
       <button class="nav-item" data-screen="transactions">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
-        Транзакции
+        <span data-i18n="transactions">Транзакции</span>
       </button>
       <button class="nav-item" data-screen="categories">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-        Категории
+        <span data-i18n="categories">Категории</span>
       </button>
       <button class="nav-item" data-screen="goals">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
-        Цели
+        <span data-i18n="goals">Цели</span>
+      </button>
+      <button class="nav-item" data-screen="plan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span data-i18n="plan">План</span>
       </button>
       <button class="nav-item" data-screen="settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        Настройки
+        <span data-i18n="settings">Настройки</span>
       </button>
     </nav>
     <div class="nav-footer">
@@ -89,12 +93,12 @@
       <section class="screen active" id="screen-overview">
         <div class="page-head">
           <div>
-            <h1 class="page-title">Обзор</h1>
+            <h1 class="page-title" data-i18n="overview">Обзор</h1>
             <div class="page-sub" id="overviewSub">Ваш финансовый обзор</div>
           </div>
           <button class="btn btn-primary" data-action="new-tx">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-            Добавить
+            <span data-i18n="add">Добавить</span>
           </button>
         </div>
 
@@ -159,7 +163,7 @@
       <section class="screen" id="screen-transactions">
         <div class="page-head">
           <div>
-            <h1 class="page-title">Транзакции</h1>
+            <h1 class="page-title" data-i18n="transactions">Транзакции</h1>
             <div class="page-sub" id="txCount">0 операций</div>
           </div>
           <button class="btn btn-primary" data-action="new-tx">
@@ -199,7 +203,7 @@
       <section class="screen" id="screen-categories">
         <div class="page-head">
           <div>
-            <h1 class="page-title">Категории</h1>
+            <h1 class="page-title" data-i18n="categories">Категории</h1>
             <div class="page-sub">Управление категориями доходов и расходов</div>
           </div>
           <button class="btn btn-primary" data-action="new-category">
@@ -220,7 +224,7 @@
       <section class="screen" id="screen-goals">
         <div class="page-head">
           <div>
-            <h1 class="page-title">Цели</h1>
+            <h1 class="page-title" data-i18n="goals">Цели</h1>
             <div class="page-sub">Финансовые цели и накопления</div>
           </div>
           <button class="btn btn-primary" data-action="new-goal">
@@ -231,11 +235,29 @@
         <div class="goals-grid" id="goalsGrid"></div>
       </section>
 
+      <!-- PLAN -->
+      <section class="screen" id="screen-plan">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title" data-i18n="plan_title">План покупок</h1>
+            <div class="page-sub" data-i18n="plan_sub">Запланированные траты и крупные цели</div>
+          </div>
+          <button class="btn btn-primary" data-action="new-plan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            <span data-i18n="plan_add">Добавить покупку</span>
+          </button>
+        </div>
+
+        <div class="plan-summary" id="planSummary"></div>
+
+        <div class="plan-grid" id="planGrid"></div>
+      </section>
+
       <!-- SETTINGS -->
       <section class="screen" id="screen-settings">
         <div class="page-head">
           <div>
-            <h1 class="page-title">Настройки</h1>
+            <h1 class="page-title" data-i18n="settings">Настройки</h1>
             <div class="page-sub">Валюта, данные и оформление</div>
           </div>
         </div>
@@ -243,10 +265,22 @@
         <div class="settings-grid">
           <div class="card">
             <div class="card-title">Основные</div>
+
             <div class="setting-row">
               <div>
-                <div class="setting-label">Валюта</div>
-                <div class="setting-desc">Символ отображения сумм</div>
+                <div class="setting-label" data-i18n="set_lang">Язык интерфейса</div>
+                <div class="setting-desc" data-i18n="set_lang_desc">Русский или английский</div>
+              </div>
+              <select class="field" id="setLang">
+                <option value="ru">Русский</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+
+            <div class="setting-row">
+              <div>
+                <div class="setting-label" data-i18n="set_base">Базовая валюта</div>
+                <div class="setting-desc" data-i18n="set_base_desc">В ней ведётся учёт; остальные — по курсу</div>
               </div>
               <select class="field" id="setCurrency">
                 <option value="RUB">₽ Рубль</option>
@@ -254,8 +288,26 @@
                 <option value="EUR">€ Евро</option>
                 <option value="KZT">₸ Тенге</option>
                 <option value="UAH">₴ Гривна</option>
+                <option value="BYN">Br Белорусский рубль</option>
+                <option value="GBP">£ Фунт</option>
+                <option value="CNY">¥ Юань</option>
+                <option value="JPY">¥ Иена</option>
+                <option value="TRY">₺ Лира</option>
+                <option value="AED">د.إ Дирхам</option>
+                <option value="CHF">₣ Франк</option>
+                <option value="PLN">zł Злотый</option>
+                <option value="CAD">C$ Канадский доллар</option>
               </select>
             </div>
+
+            <div class="setting-row">
+              <div>
+                <div class="setting-label" data-i18n="set_rates">Курсы валют</div>
+                <div class="setting-desc" data-i18n="set_rates_desc">Сколько единиц валюты за 1 единицу базовой</div>
+              </div>
+              <button class="btn btn-ghost" id="editRatesBtn">Настроить</button>
+            </div>
+
             <div class="setting-row">
               <div>
                 <div class="setting-label">Первый день недели</div>
@@ -266,6 +318,7 @@
                 <option value="0">Воскресенье</option>
               </select>
             </div>
+
             <div class="setting-row">
               <div>
                 <div class="setting-label">Тема</div>
@@ -330,6 +383,10 @@
     <button class="mnav-item" data-screen="goals">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
       Цели
+    </button>
+    <button class="mnav-item" data-screen="plan">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      План
     </button>
     <button class="mnav-item" data-screen="settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
