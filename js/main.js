@@ -1,93 +1,177 @@
-document.addEventListener('DOMContentLoaded', () => {
-  
-  // 1. Мобильное меню
-  const burger = document.querySelector('.burger');
-  const nav = document.querySelector('#nav');
-  const body = document.body;
+// ===================================
+// Aroma Coffee House - Interactive JS
+// ===================================
 
-  if (burger && nav) {
-    burger.addEventListener('click', () => {
-      const isOpen = nav.classList.toggle('is-open');
-      burger.setAttribute('aria-expanded', isOpen);
-      body.classList.toggle('nav-open', isOpen);
-      
-      // Анимация бургера
-      if (isOpen) {
-        burger.style.transform = 'rotate(90deg)'; // Пример, можно убрать если не нравится
-      } else {
-        burger.style.transform = 'none';
-      }
-    });
-
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Мобильное меню
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const navMenu = document.querySelector('.nav-menu');
+    
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', function() {
+            navMenu.classList.toggle('active');
+            
+            // Анимация иконки бургера
+            const spans = this.querySelectorAll('span');
+            if (navMenu.classList.contains('active')) {
+                spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+                spans[1].style.opacity = '0';
+                spans[2].style.transform = 'rotate(-45deg) translate(7px, -6px)';
+            } else {
+                spans[0].style.transform = 'none';
+                spans[1].style.opacity = '1';
+                spans[2].style.transform = 'none';
+            }
+        });
+    }
+    
     // Закрытие меню при клике на ссылку
-    nav.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        nav.classList.remove('is-open');
-        burger.setAttribute('aria-expanded', 'false');
-        body.classList.remove('nav-open');
-      });
-    });
-  }
-
-  // 2. Появление элементов при скролле (Reveal Animation)
-  const reveals = document.querySelectorAll('.reveal');
-
-  if (reveals.length > 0) {
-    // Используем IntersectionObserver — это современный стандарт
-    const observerOptions = {
-      root: null,
-      rootMargin: '0px 0px -50px 0px', // Элемент появляется чуть раньше конца экрана
-      threshold: 0.1
-    };
-
-    const observer = new IntersectionObserver((entries, obs) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-visible');
-          // Опционально: перестать наблюдать после появления для экономии ресурсов
-          // obs.unobserve(entry.target); 
-        }
-      });
-    }, observerOptions);
-
-    reveals.forEach(el => {
-      observer.observe(el);
+    const navLinks = document.querySelectorAll('.nav-menu a');
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            navMenu.classList.remove('active');
+            const spans = mobileMenuBtn.querySelectorAll('span');
+            spans[0].style.transform = 'none';
+            spans[1].style.opacity = '1';
+            spans[2].style.transform = 'none';
+        });
     });
     
-    // ВАЖНО: Если некоторые элементы уже видны при загрузке (например, Hero секция),
-    // мы должны принудительно добавить им класс is-visible сразу, иначе они останутся скрытыми
-    setTimeout(() => {
-      reveals.forEach(el => {
-        const rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight && rect.bottom >= 0) {
-           el.classList.add('is-visible');
+    // Плавная прокрутка для якорных ссылок
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                const offsetTop = target.offsetTop - 80;
+                window.scrollTo({
+                    top: offsetTop,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+    
+    // Анимация появления элементов при скролле
+    const revealElements = document.querySelectorAll('.reveal');
+    
+    const revealOnScroll = () => {
+        const windowHeight = window.innerHeight;
+        const elementVisible = 150;
+        
+        revealElements.forEach(element => {
+            const elementTop = element.getBoundingClientRect().top;
+            
+            if (elementTop < windowHeight - elementVisible) {
+                element.classList.add('active');
+            }
+        });
+    };
+    
+    window.addEventListener('scroll', revealOnScroll);
+    revealOnScroll(); // Проверяем при загрузке
+    
+    // Изменение навбара при скролле
+    const navbar = document.querySelector('.navbar');
+    let lastScroll = 0;
+    
+    window.addEventListener('scroll', () => {
+        const currentScroll = window.pageYOffset;
+        
+        if (currentScroll > 100) {
+            navbar.style.background = 'rgba(13, 13, 13, 0.98)';
+            navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.5)';
+        } else {
+            navbar.style.background = 'rgba(13, 13, 13, 0.95)';
+            navbar.style.boxShadow = 'none';
         }
-      });
-    }, 100);
-  }
-
-  // 3. Прогресс-бар скролла
-  const progressBar = document.querySelector('.progress span');
-  if (progressBar) {
-    window.addEventListener('scroll', () => {
-      const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const scrollPercent = (scrollTop / docHeight) * 100;
-      progressBar.style.transform = `scaleX(${scrollPercent / 100})`;
+        
+        lastScroll = currentScroll;
     });
-  }
-
-  // 4. Хедер: изменение стиля при скролле
-  const header = document.getElementById('header');
-  if (header) {
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 50) {
-        header.classList.add('is-scrolled');
-      } else {
-        header.classList.remove('is-scrolled');
-      }
+    
+    // Обработка формы бронирования
+    const bookingForm = document.getElementById('bookingForm');
+    
+    if (bookingForm) {
+        bookingForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Получаем данные формы
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            // Валидация телефона
+            const phoneRegex = /^\+?[0-9\s\-\(\)]{10,}$/;
+            if (!phoneRegex.test(data.phone)) {
+                alert('Пожалуйста, введите корректный номер телефона');
+                return;
+            }
+            
+            // Валидация даты (не в прошлом)
+            const selectedDate = new Date(data.date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (selectedDate < today) {
+                alert('Дата бронирования не может быть в прошлом');
+                return;
+            }
+            
+            // Имитация отправки
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Отправка...';
+            submitBtn.disabled = true;
+            
+            setTimeout(() => {
+                alert(`Спасибо, ${data.name}! Ваша бронь подтверждена.\n\n` +
+                      `Дата: ${data.date}\n` +
+                      `Время: ${data.time}\n` +
+                      `Гостей: ${data.guests}\n\n` +
+                      `Мы свяжемся с вами по телефону ${data.phone} для подтверждения.`);
+                
+                this.reset();
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }, 1500);
+        });
+    }
+    
+    // Установка минимальной даты в форме (сегодня)
+    const dateInput = document.getElementById('date');
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.setAttribute('min', today);
+    }
+    
+    // Параллакс эффект для hero секции
+    const hero = document.querySelector('.hero');
+    
+    if (hero) {
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const rate = scrolled * 0.5;
+            
+            if (scrolled < window.innerHeight) {
+                hero.style.backgroundPositionY = `${rate}px`;
+            }
+        });
+    }
+    
+    // Эффект свечения при движении мыши для карточек
+    const cards = document.querySelectorAll('.menu-card, .review-card');
+    
+    cards.forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            card.style.setProperty('--mouse-x', `${x}px`);
+            card.style.setProperty('--mouse-y', `${y}px`);
+        });
     });
-  }
-
-  console.log('Amber & Bean JS loaded successfully');
+    
+    console.log('☕ Aroma Coffee House website loaded successfully!');
 });
